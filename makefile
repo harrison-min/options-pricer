@@ -6,8 +6,9 @@ TARGET = bin/main
 SOURCE = src/main.cpp
 
 $(TARGET): $(SOURCE)
-	mkdir -p bin
+	mkdir -p bin data
 	$(COMPILER) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(SOURCE) $(LIBS)
 
 clean:
-	rm -rf bin
+	rm -rf bin 
+	rm -f data/*
