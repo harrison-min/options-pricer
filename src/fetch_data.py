@@ -9,7 +9,8 @@ def fetchAndStoreCSV(symbol, client):
         symbol = symbol,
         interval = "1day",
         outputsize = 90,
-        timezone = "America/New_York"
+        timezone = "America/New_York",
+        order = "ASC"
     )
 
     csv_data = tsData.as_csv()
@@ -18,6 +19,7 @@ def fetchAndStoreCSV(symbol, client):
     with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(csv_data)
+
 
 def main():
     if len(sys.argv) < 2:
