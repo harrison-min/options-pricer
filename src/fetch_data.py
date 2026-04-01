@@ -10,7 +10,8 @@ def fetchAndStoreCSV(symbol, client):
         interval = "1day",
         outputsize = 90,
         timezone = "America/New_York",
-        order = "ASC"
+        order = "ASC",
+        adjust="true"
     )
 
     csv_data = tsData.as_csv()

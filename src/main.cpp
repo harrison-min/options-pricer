@@ -3,7 +3,7 @@
 #include <iomanip>
 
 #include "parser.hpp"
-
+#include "engine.hpp"
 
 void printTickerData(const TickerData & data) {
     std::cout << "TickerData for ticker: " << data.tickerName << std::endl;
@@ -31,8 +31,8 @@ int main(int argc, char ** argv) {
     std::string filePath = "data/" + ticker + "_data.csv";
 
     fetchData(ticker);
-    Parser myParser;
-    TickerData myData = myParser.parseTwelveDataCSV(filePath);
+    TickerData myData = Parser::parseTwelveDataCSV(filePath);
 
-    printTickerData(myData);
+    std::cout << "Close to Close volatility : " << AnalyticsEngine::closeToCloseVolatility(myData)
+        << " vs. Parkinson Volatility : " << AnalyticsEngine::parkinsonVolatility(myData);
 }
