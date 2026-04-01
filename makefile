@@ -3,7 +3,7 @@ CFLAGS =  -Wall
 LDFLAGS = 
 LIBS = 
 TARGET = bin/main
-SOURCE = src/main.cpp src/parser.cpp
+SOURCE = src/main.cpp src/parser.cpp src/engine.cpp
 
 $(TARGET): $(SOURCE)
 	mkdir -p bin data
