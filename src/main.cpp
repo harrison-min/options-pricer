@@ -33,6 +33,14 @@ int main(int argc, char ** argv) {
     fetchData(ticker);
     TickerData myData = Parser::parseTwelveDataCSV(filePath);
 
-    std::cout << "Close to Close volatility : " << AnalyticsEngine::closeToCloseVolatility(myData)
-        << " vs. Parkinson Volatility : " << AnalyticsEngine::parkinsonVolatility(myData);
+    double closeToCloseVolatility = AnalyticsEngine::closeToCloseVolatility(myData);
+    double parkinsonVolatility = AnalyticsEngine::parkinsonVolatility(myData);
+ 
+    std::cout << "Close to Close volatility : " << closeToCloseVolatility << " vs. Parkinson Volatility : " << parkinsonVolatility << "\n";
+
+    double callCTCPrice = AnalyticsEngine::blackScholesCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+    double parkinsonPrice = AnalyticsEngine::blackScholesCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+
+
+    std::cout << "Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice;
 }

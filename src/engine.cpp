@@ -5,6 +5,32 @@
 
 static const double sqrtTotalTradingPeriods = std::sqrt(252.0);
 
+static inline double cumulativeNormal (double x) {
+    return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
+}
+
+
+double AnalyticsEngine::blackScholesCallPrice (double volatility, double spotPrice, double strikePrice, double timeToMaturity) {
+    const double riskFreeRate = 0.0431; //10 y treasury yield
+    
+    assert(volatility > 0 && timeToMaturity > 0);
+
+    const double totalVolatility = volatility * std::sqrt (timeToMaturity);
+
+    double delta = (std::log (spotPrice / strikePrice) + (riskFreeRate + volatility * volatility * 0.5) * timeToMaturity) / totalVolatility;
+
+    double probExercise = delta - totalVolatility;
+
+    double n1 = cumulativeNormal(delta);
+    double n2 = cumulativeNormal(probExercise);
+
+    double callPrice = spotPrice * n1 - strikePrice * std::exp (- riskFreeRate * timeToMaturity) * n2;
+
+
+    return callPrice;
+
+}
+
 double AnalyticsEngine::closeToCloseVolatility (const TickerData &data) {
     // currently setting dividends to 0 as API has not been set up yet
     size_t totalDataPoints = data.close.size();
