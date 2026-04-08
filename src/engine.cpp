@@ -6,6 +6,7 @@
 
 static const double sqrtTotalTradingPeriods = std::sqrt(252.0);
 static const double riskFreeRate = 0.0431; //10 y treasury yield
+static const int stepsPerPath = 100;
 
 static inline double cumulativeNormal (double x) {
     return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
@@ -21,31 +22,43 @@ static double generateRandomNormal (double mean = 0.0, double deviation = 1.0) {
 }
 
 
-double AnalyticsEngine::getMCSPrice (double volatility, double spotPrice, double timeStep) {
+double AnalyticsEngine::getMCSPrice (double volatility, double spotPrice, double sqrtTimeStep) {
     double delta = riskFreeRate - 0.5 * volatility * volatility; 
 
     double randomNumber = generateRandomNormal();
 
-    double normalizedPrice = std::exp(delta * timeStep + volatility * std::sqrt(timeStep) * randomNumber);
+    double normalizedPrice = std::exp(delta * sqrtTimeStep * sqrtTimeStep + volatility * sqrtTimeStep * randomNumber);
 
     return normalizedPrice * spotPrice;
 }
 
-std::vector<double> AnalyticsEngine::createGBMMCSPath (double volatility, double spotPrice, double timeFrame) {
-    const int numberOfSteps = 100;
-    const double timeStep = timeFrame / static_cast<double>(numberOfSteps);
-    std::vector <double> path;
-    path.resize(numberOfSteps);
+void AnalyticsEngine::createGBMMCSPath (double volatility, double spotPrice, double timeFrame, std::vector<double>::iterator path ) {
+    const double timeStep = timeFrame / static_cast<double>(stepsPerPath);
+    const double sqrtTimeStep = std::sqrt(timeStep);
 
     double currentPrice = spotPrice;
-    path [0] = currentPrice;
+    *path = currentPrice;
 
-    for (int i = 1; i < numberOfSteps; ++ i) {
-        path[i] = getMCSPrice(volatility, currentPrice, timeStep);
-        currentPrice = path[i];
+    for (int i = 1; i < stepsPerPath; ++ i) {
+        *(path + i) = getMCSPrice(volatility, currentPrice, sqrtTimeStep);
+        currentPrice = *(path + i);
+    }
+}
+
+double AnalyticsEngine::monteCarloSimulationCallPrice (double volatility, double spotPrice, double strikePrice, double timeFrame, int sampleSize) {
+    std::vector<double> path;
+    path.resize(stepsPerPath * sampleSize);
+    double average = 0;
+
+    for (int i = 0; i < sampleSize; ++ i) {
+        createGBMMCSPath(volatility, spotPrice, timeFrame, path.begin() + (i * stepsPerPath));
+        double finalPrice=(path [(i + 1) * stepsPerPath - 1]);
+        average += std::max(0.0, finalPrice - strikePrice);
     }
 
-    return path;
+    average /= static_cast<double> (sampleSize);
+
+    return std::exp (-riskFreeRate * timeFrame) * average;
 }
 
 double AnalyticsEngine::blackScholesCallPrice (double volatility, double spotPrice, double strikePrice, double timeToMaturity) {

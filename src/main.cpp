@@ -46,12 +46,10 @@ int main(int argc, char ** argv) {
     double callCTCPrice = AnalyticsEngine::blackScholesCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
     double parkinsonPrice = AnalyticsEngine::blackScholesCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
 
-    std::cout << "Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice << "\n";
+    std::cout << "Black scholes Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice << "\n";
 
-    std::vector<double> ctcMCS = AnalyticsEngine::createGBMMCSPath(closeToCloseVolatility, myData.close.back(), 100.0/365.0);
-    std::vector<double> parkinsonMCS = AnalyticsEngine::createGBMMCSPath(parkinsonVolatility, myData.close.back(), 100.0/365.0);
+    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0, 100000);
+    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0, 100000);
 
-
-
-    std::cout << "MCS price using ctc: " <<  << " vs. parkinson price: " << ;
+    std::cout << "MCS Call price CTC: " << ctcMCSprice << " vs. parkinson price: " << parkinsonMCSprice << "\n";
 }
