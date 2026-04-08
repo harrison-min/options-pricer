@@ -40,16 +40,18 @@ int main(int argc, char ** argv) {
 
     double closeToCloseVolatility = AnalyticsEngine::closeToCloseVolatility(myData);
     double parkinsonVolatility = AnalyticsEngine::parkinsonVolatility(myData);
- 
+
+    OptionInfo option (OptionType::CALL , myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+
     std::cout << "Close to Close volatility : " << closeToCloseVolatility << " vs. Parkinson Volatility : " << parkinsonVolatility << "\n";
 
-    double callCTCPrice = AnalyticsEngine::blackScholesCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
-    double parkinsonPrice = AnalyticsEngine::blackScholesCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+    double callCTCPrice = AnalyticsEngine::blackScholesPrice(closeToCloseVolatility, option);
+    double parkinsonPrice = AnalyticsEngine::blackScholesPrice(parkinsonVolatility, option);
 
     std::cout << "Black scholes Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice << "\n";
 
-    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0, 100000);
-    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0, 100000);
+    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(closeToCloseVolatility, option, 10000);
+    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationPrice(parkinsonVolatility, option, 10000);
 
     std::cout << "MCS Call price CTC: " << ctcMCSprice << " vs. parkinson price: " << parkinsonMCSprice << "\n";
 }
