@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <iomanip>
+#include <random>
 
 #include "parser.hpp"
 #include "engine.hpp"
@@ -27,6 +28,10 @@ void fetchData(const std::string & ticker) {
 }
 
 int main(int argc, char ** argv) {
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+
+
     std::string ticker = "AAPL";
     std::string filePath = "data/" + ticker + "_data.csv";
 
@@ -35,12 +40,18 @@ int main(int argc, char ** argv) {
 
     double closeToCloseVolatility = AnalyticsEngine::closeToCloseVolatility(myData);
     double parkinsonVolatility = AnalyticsEngine::parkinsonVolatility(myData);
- 
+
+    OptionInfo option (OptionType::CALL , myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+
     std::cout << "Close to Close volatility : " << closeToCloseVolatility << " vs. Parkinson Volatility : " << parkinsonVolatility << "\n";
 
-    double callCTCPrice = AnalyticsEngine::blackScholesCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
-    double parkinsonPrice = AnalyticsEngine::blackScholesCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
+    double callCTCPrice = AnalyticsEngine::blackScholesPrice(closeToCloseVolatility, option);
+    double parkinsonPrice = AnalyticsEngine::blackScholesPrice(parkinsonVolatility, option);
 
+    std::cout << "Black scholes Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice << "\n";
 
-    std::cout << "Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice;
+    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(closeToCloseVolatility, option, 10000);
+    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationPrice(parkinsonVolatility, option, 10000);
+
+    std::cout << "MCS Call price CTC: " << ctcMCSprice << " vs. parkinson price: " << parkinsonMCSprice << "\n";
 }
