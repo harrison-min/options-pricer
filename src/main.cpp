@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <iomanip>
+#include <random>
 
 #include "parser.hpp"
 #include "engine.hpp"
@@ -27,6 +28,10 @@ void fetchData(const std::string & ticker) {
 }
 
 int main(int argc, char ** argv) {
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+
+
     std::string ticker = "AAPL";
     std::string filePath = "data/" + ticker + "_data.csv";
 
@@ -41,6 +46,12 @@ int main(int argc, char ** argv) {
     double callCTCPrice = AnalyticsEngine::blackScholesCallPrice(closeToCloseVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
     double parkinsonPrice = AnalyticsEngine::blackScholesCallPrice(parkinsonVolatility, myData.close.back(), myData.close.back() + 10, 100.0/365.0);
 
+    std::cout << "Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice << "\n";
 
-    std::cout << "Call price CTC: " << callCTCPrice << " vs. parkinson price: " << parkinsonPrice;
+    std::vector<double> ctcMCS = AnalyticsEngine::createGBMMCSPath(closeToCloseVolatility, myData.close.back(), 100.0/365.0);
+    std::vector<double> parkinsonMCS = AnalyticsEngine::createGBMMCSPath(parkinsonVolatility, myData.close.back(), 100.0/365.0);
+
+
+
+    std::cout << "MCS price using ctc: " <<  << " vs. parkinson price: " << ;
 }

@@ -2,16 +2,53 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
+#include <random>
 
 static const double sqrtTotalTradingPeriods = std::sqrt(252.0);
+static const double riskFreeRate = 0.0431; //10 y treasury yield
 
 static inline double cumulativeNormal (double x) {
     return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
 }
 
+static double generateRandomNormal (double mean = 0.0, double deviation = 1.0) {
+    static std::random_device rd{};
+    static std::mt19937 gen{rd()};
+
+    std::normal_distribution<double> distribution(mean, deviation);
+
+    return distribution (gen);
+}
+
+
+double AnalyticsEngine::getMCSPrice (double volatility, double spotPrice, double timeStep) {
+    double delta = riskFreeRate - 0.5 * volatility * volatility; 
+
+    double randomNumber = generateRandomNormal();
+
+    double normalizedPrice = std::exp(delta * timeStep + volatility * std::sqrt(timeStep) * randomNumber);
+
+    return normalizedPrice * spotPrice;
+}
+
+std::vector<double> AnalyticsEngine::createGBMMCSPath (double volatility, double spotPrice, double timeFrame) {
+    const int numberOfSteps = 100;
+    const double timeStep = timeFrame / static_cast<double>(numberOfSteps);
+    std::vector <double> path;
+    path.resize(numberOfSteps);
+
+    double currentPrice = spotPrice;
+    path [0] = currentPrice;
+
+    for (int i = 1; i < numberOfSteps; ++ i) {
+        path[i] = getMCSPrice(volatility, currentPrice, timeStep);
+        currentPrice = path[i];
+    }
+
+    return path;
+}
 
 double AnalyticsEngine::blackScholesCallPrice (double volatility, double spotPrice, double strikePrice, double timeToMaturity) {
-    const double riskFreeRate = 0.0431; //10 y treasury yield
     
     assert(volatility > 0 && timeToMaturity > 0);
 
@@ -84,3 +121,4 @@ double AnalyticsEngine::parkinsonVolatility (const TickerData &data) {
 
     return annualizedVolatility;
 }
+
