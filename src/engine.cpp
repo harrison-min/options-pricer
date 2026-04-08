@@ -55,7 +55,11 @@ double AnalyticsEngine::monteCarloSimulationPrice (double volatility, OptionInfo
     for (int i = 0; i < sampleSize; ++ i) {
         createGBMMCSPath(volatility, option, path.begin() + (i * stepsPerPath));
         double finalPrice=(path [(i + 1) * stepsPerPath - 1]);
-        average += std::max(0.0, finalPrice - option.strikePrice);
+        if (option.type == OptionType::CALL) {
+            average += std::max(0.0, finalPrice - option.strikePrice);
+        } else {
+            average += std::max(0.0, option.strikePrice - finalPrice);
+        }
     }
 
     average /= static_cast<double> (sampleSize);
@@ -74,12 +78,15 @@ double AnalyticsEngine::blackScholesPrice (double volatility, OptionInfo option)
 
     double probExercise = delta - totalVolatility;
 
-    double n1 = cumulativeNormal(delta);
-    double n2 = cumulativeNormal(probExercise);
+    double price;
 
-    double callPrice = option.spotPrice * n1 - option.strikePrice * std::exp (- riskFreeRate * option.timeToExpiry) * n2;
+    if (option.type == OptionType::CALL) {
+        price = option.spotPrice * cumulativeNormal(delta) - option.strikePrice * std::exp (- riskFreeRate * option.timeToExpiry) * cumulativeNormal(probExercise);
+    } else {
+        price = option.strikePrice * std::exp (- riskFreeRate * option.timeToExpiry) * cumulativeNormal(- probExercise) - option.spotPrice * cumulativeNormal(- delta);
+    }
 
-    return callPrice;
+    return price;
 }
 
 double AnalyticsEngine::closeToCloseVolatility (const TickerData &data) {
