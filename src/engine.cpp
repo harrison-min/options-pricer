@@ -5,7 +5,7 @@
 #include <random>
 
 static const double sqrtTotalTradingPeriods = std::sqrt(252.0);
-static const double riskFreeRate = 0.0431; //10 y treasury yield
+static const double riskFreeRate = 0.0369; //3 m treasury yield
 static const int stepsPerPath = 100;
 
 static inline double cumulativeNormal (double x) {
@@ -17,6 +17,15 @@ static double generateRandomNormal (double mean = 0.0, double deviation = 1.0) {
     static std::mt19937 gen{rd()};
 
     std::normal_distribution<double> distribution(mean, deviation);
+
+    return distribution (gen);
+}
+
+static double generateRandomUniform (double min = 0.0, double max = 1.0) {
+    static std::random_device rd{};
+    static std::mt19937 gen{rd()};
+
+    std::uniform_real_distribution<double> distribution(min, max);
 
     return distribution (gen);
 }
@@ -143,3 +152,59 @@ double AnalyticsEngine::parkinsonVolatility (const TickerData &data) {
     return annualizedVolatility;
 }
 
+std::vector<double> AnalyticsEngine::precomputeLogReturns (const TickerData & data) {
+    std::vector<double> returns;
+    int numDays = data.close.size();
+
+    returns.resize(numDays - 1);
+
+    for (int i = 0; i < numDays - 1; ++ i) {
+        returns[i] = std::log(data.close[i + 1] / data.close[i]);
+    }
+
+    return returns;
+}
+
+double AnalyticsEngine::volatilityLikelihood (double volatility, const TickerData & data, const std::vector<double>& returns) {
+    double variance = volatility * volatility * data.interval;
+    double logL = 0.0;
+
+    for (double r: returns) {
+        logL += -0.5 * (std::log(variance) + (r * r) / variance);
+    }
+
+    return logL;
+}
+
+std::pair<double, double> AnalyticsEngine::metroHastingsChoice (double vCandidate, double pCandidate, double vCurr, double pCurr) {
+    if (pCandidate > pCurr) return {vCandidate, pCandidate};
+
+    double acceptanceRatio = std::exp (pCandidate - pCurr);
+
+    if (generateRandomUniform() < acceptanceRatio) {
+        return {vCandidate, pCandidate};
+    }
+
+    return {vCurr, pCurr};
+} 
+
+
+std::vector<double> AnalyticsEngine::createMCMCChain (double startingVolatility, const TickerData & data, int chainLength) {
+    std::vector<double> chain;
+    chain.resize(chainLength);
+    chain [0] = startingVolatility;
+    std::vector<double> returns = precomputeLogReturns(data);
+    double prevProbability = volatilityLikelihood(startingVolatility, data, returns);
+
+
+    for (int i = 1; i < chainLength; ++ i) {
+        double candidate = generateRandomNormal(chain[i-1], 0.01);
+        double pCandidate = volatilityLikelihood(candidate, data, returns);
+
+        std::pair<double, double> result = metroHastingsChoice(candidate, pCandidate, chain[i-1], prevProbability);
+        chain [i] = result.first;
+        prevProbability = result.second;
+    }
+
+    return chain;
+}

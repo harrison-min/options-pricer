@@ -8,6 +8,7 @@ struct TickerData {
     std::vector<double> low;
     std::vector<double> close;
     std::vector<double> volume;
+    std::vector<double> returns;
     std::string tickerName;
     double interval;
 };
