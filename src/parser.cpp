@@ -5,13 +5,14 @@
 
 TickerData Parser::parseTwelveDataCSV (const std::string & filePath) {
     TickerData data;
-    data.open.reserve(100);
-    data.high.reserve(100);
-    data.low.reserve(100);
-    data.close.reserve(100);
-    data.volume.reserve(100);
+    const int reserveSize = 100;
+    data.open.reserve(reserveSize);
+    data.high.reserve(reserveSize);
+    data.low.reserve(reserveSize);
+    data.close.reserve(reserveSize);
+    data.volume.reserve(reserveSize);
 
-    data.interval = 1;
+    data.interval = 1.0/252.0;
 
     auto firstSlash = std::find(filePath.begin(), filePath.end(), '/');
     auto firstUnderscore = std::find (filePath.begin(), filePath.end(), '_');
