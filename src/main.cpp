@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <iomanip>
-#include <random>
 
 #include "parser.hpp"
 #include "engine.hpp"
@@ -19,28 +18,22 @@ void printTickerData(const TickerData & data) {
     }
 }
 
-void fetchData(const std::string & ticker) {
+TickerData fetchData(const std::string & ticker) {
     std::cout << "Fetching Data\n";
     std::string command = "python3 src/fetch_data.py " + ticker;
 
     std::system(command.c_str());
 
-}
-
-int main(int argc, char ** argv) {
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
-
-    std::string ticker = "AMZN";
     std::string filePath = "data/" + ticker + "_data.csv";
-
-    fetchData(ticker);
     TickerData myData = Parser::parseTwelveDataCSV(filePath);
 
-    double closeToCloseVolatility = AnalyticsEngine::closeToCloseVolatility(myData);
-    double parkinsonVolatility = AnalyticsEngine::parkinsonVolatility(myData);
-    const int chainLength = 100000;
-    std::vector<double> chain = AnalyticsEngine::createMCMCChain(closeToCloseVolatility, myData, chainLength);
+    return myData;
+}
+
+double getOptionData (TickerData data, OptionInfo option, const int sampleSize) {
+    double closeToCloseVolatility = AnalyticsEngine::closeToCloseVolatility(data);
+    double parkinsonVolatility = AnalyticsEngine::parkinsonVolatility(data);
+    std::vector<double> chain = AnalyticsEngine::createMCMCChain(closeToCloseVolatility, data, sampleSize);
     double mcmcVolatility = 0;
 
     for (size_t i = chain.size() * 0.2; i < chain.size(); ++ i) {
@@ -49,7 +42,6 @@ int main(int argc, char ** argv) {
     mcmcVolatility /= (chain.size() - chain.size() * 0.2);
 
 
-    OptionInfo option (OptionType::CALL , myData.close.back(), myData.close.back() + 10, 100.0/252.0);
 
     std::cout << "Options stats:\nSpotPrice: " << option.spotPrice << ", strikePrice: " << option.strikePrice << ", timeToExpiry: " << option.timeToExpiry << "\n";
 
@@ -65,12 +57,26 @@ int main(int argc, char ** argv) {
                 << " vs. parkinson price: " << parkinsonPrice 
                 << " vs. MCMC price: " << mcmcPrice << "\n";
 
-    const int numSteps = 100000;                
-    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(closeToCloseVolatility, option, numSteps);
-    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationPrice(parkinsonVolatility, option, numSteps);
-    double mcmcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(mcmcVolatility, option, numSteps);
+    double ctcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(closeToCloseVolatility, option, sampleSize);
+    double parkinsonMCSprice = AnalyticsEngine::monteCarloSimulationPrice(parkinsonVolatility, option, sampleSize);
+    double mcmcMCSprice = AnalyticsEngine::monteCarloSimulationPrice(mcmcVolatility, option, sampleSize);
 
     std::cout << "MCS Call price CTC: " << ctcMCSprice 
                 << " vs. parkinson price: " << parkinsonMCSprice
                 << " vs. mcmc price: " << mcmcMCSprice << "\n";
+
+    return mcmcMCSprice;
+}
+
+
+int main(int argc, char ** argv) {
+
+
+    std::string ticker = "AMZN";
+
+    TickerData data = fetchData(ticker);
+    OptionInfo option (OptionType::CALL , data.close.back(), data.close.back() + 12, 112.0/252.0);
+
+    getOptionData(data, option, 10000);
+
 }
