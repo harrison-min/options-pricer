@@ -18,6 +18,11 @@ struct OptionInfo {
     }
 };
 
+struct ProbabilityHistogram {
+    std::vector<double> distribution;
+    double binWidth;
+}
+
 
 class AnalyticsEngine {
     private:
@@ -32,4 +37,5 @@ class AnalyticsEngine {
         static double blackScholesPrice (double volatility, OptionInfo option);
         static double monteCarloSimulationPrice (double volatility, OptionInfo option, int sampleSize);
         static std::vector<double> createMCMCChain (double startingVolatility, const TickerData & data, int chainLength);
+        static ProbabilityHistogram pdfHistogramFromMCMC (const std::vector<double>& chain, int numBins);
 };

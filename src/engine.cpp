@@ -3,6 +3,7 @@
 #include <vector>
 #include <cassert>
 #include <random>
+#include <algorithm>
 
 static const double sqrtTotalTradingPeriods = std::sqrt(252.0);
 static const double riskFreeRate = 0.0369; //3 m treasury yield
@@ -186,7 +187,7 @@ std::pair<double, double> AnalyticsEngine::metroHastingsChoice (double vCandidat
     }
 
     return {vCurr, pCurr};
-} 
+}
 
 
 std::vector<double> AnalyticsEngine::createMCMCChain (double startingVolatility, const TickerData & data, int chainLength) {
@@ -207,4 +208,29 @@ std::vector<double> AnalyticsEngine::createMCMCChain (double startingVolatility,
     }
 
     return chain;
+}
+
+ProbabilityHistogram AnalyticsEngine::pdfHistogramFromMCMC (const std::vector<double>& chain, int numBins) {
+    ProbabilityHistogram probability;
+    probability.distribution.resize(numBins);
+    double min = * (std::min_element(chain.begin(), chain.end()));
+    double max = * (std::max_element(chain.begin(), chain.end()));
+
+    probability.binWidth = (max - min) / static_cast<double>(numBins);
+
+    for (double d: chain) {
+        int binIndex = static_cast<int>((d - min)/probability.binWidth);
+        if (binIndex >= numBins){ 
+            binIndex = numBins - 1;
+        }
+
+        probability.distribution[binIndex] += 1.0;
+    }
+
+    double totalSamples = static_cast<double>(chain.size());
+    for (double & d: probability.distribution) {
+        d /= (totalSamples * probability.binWidth);
+    }
+
+    return probability;
 }
