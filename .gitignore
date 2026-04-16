@@ -2,3 +2,6 @@
 *.csv
 *.exe
 .venv/*
+*.json
+token/*
+data/*

@@ -15,5 +15,5 @@ struct TickerData {
 
 class Parser {
     public:
-        static TickerData parseTwelveDataCSV (const std::string & filePath);
+        static TickerData parseTickerCSV (const std::string & filePath);
 };
