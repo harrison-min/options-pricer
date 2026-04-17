@@ -4,6 +4,7 @@
 
 #include "parser.hpp"
 #include "engine.hpp"
+#include "request.hpp"
 
 void printTickerData(const TickerData & data) {
     std::cout << "TickerData for ticker: " << data.tickerName << std::endl;
@@ -74,11 +75,19 @@ int main(int argc, char ** argv) {
 
     std::string ticker = "AMZN";
 
+    RequestBuilder request(ticker, RequestType::CANCEL_ORDER);
+    request.writeRequest();
+    
+    std::string command = "python3 src/fetch_data.py " + ticker; 
+
+    std::system(command.c_str());
+    
+    /*
     TickerData data = fetchData(ticker, "CS");
     OptionInfo option (OptionType::CALL , data.close.back(), data.close.back() + 12, 112.0/252.0);
 
     printTickerData(data);
 
-//    getOptionData(data, option, 10000);
-
+    getOptionData(data, option, 10000);
+    */
 }

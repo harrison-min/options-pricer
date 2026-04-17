@@ -1,6 +1,7 @@
 import os
 import sys
 import csv
+import json
 from dotenv import load_dotenv, dotenv_values
 from twelvedata import TDClient
 
@@ -25,8 +26,12 @@ class RequestHandler:
         TDKey = os.getenv("TWELVE_DATA_KEY")
         self.tdClient = TDClient(TDKey)
 
-    #def parseRequest (self, filePath):         
+    def parseRequest (self, filePath):         
+        with open(filePath, 'r') as file:
+            data = json.load(file)
         
+        print(json.dumps(data, indent=4))
+        print(data['ticker'])
 
     def fetchTDTickerData(self, ticker):
         tsData = self.tdClient.time_series(
@@ -115,5 +120,4 @@ def main():
 
 if __name__ == "__main__":
     myHandler = RequestHandler()
-    ticker = 'AAPL'
-    myHandler.fetchCSTickerData(ticker)
+    myHandler.parseRequest('request/request.json')
