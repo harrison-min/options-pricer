@@ -10,13 +10,18 @@ enum class RequestType {
 
 class RequestBuilder {
     private:
+        std::string filePath;
+        std::string destination; 
         std::string ticker;
         RequestType type;
 
         std::string typeToString();
     public:
         RequestBuilder(std::string symbol, RequestType action);
-        bool writeRequest();
+        RequestBuilder & writeRequest();
+        RequestBuilder & sendRequest();
+        RequestBuilder & setDestination(std::string source);
         RequestBuilder & setTicker(std::string symbol);
         RequestBuilder & setType(RequestType action);
+
 };

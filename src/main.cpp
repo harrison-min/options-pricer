@@ -75,13 +75,12 @@ int main(int argc, char ** argv) {
 
     std::string ticker = "AMZN";
 
-    RequestBuilder request(ticker, RequestType::CANCEL_ORDER);
-    request.writeRequest();
-    
-    std::string command = "python3 src/fetch_data.py " + ticker; 
+    RequestBuilder request(ticker, RequestType::FETCH_HISTORICAL_DATA);
 
-    std::system(command.c_str());
-    
+    std::string command;
+
+    request.setDestination("CS").writeRequest().sendRequest();
+    request.setDestination("TD").writeRequest().sendRequest();
     /*
     TickerData data = fetchData(ticker, "CS");
     OptionInfo option (OptionType::CALL , data.close.back(), data.close.back() + 12, 112.0/252.0);

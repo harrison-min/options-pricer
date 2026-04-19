@@ -12,5 +12,4 @@ $(TARGET): $(SOURCE)
 clean:
 	rm -rf bin 
 	rm -f data/*
-	rm -f token/*
 	rm -f request/*

@@ -1,5 +1,6 @@
 #include "request.hpp"
 #include <fstream>
+#include <filesystem>
 
 RequestBuilder::RequestBuilder(std::string symbol, RequestType action):
     ticker(symbol), type(action) {
@@ -24,16 +25,42 @@ std::string RequestBuilder::typeToString() {
     return "";
 }
 
-bool RequestBuilder::writeRequest() {
-    std::ofstream file("request/request.json");
+RequestBuilder & RequestBuilder::sendRequest() {
+    std::string command = "python3 src/fetch_data.py " + filePath; 
+    std::system(command.c_str());
+
+    return *this;
+}
+
+RequestBuilder & RequestBuilder::writeRequest() {
+    std::string baseName = "request/request_";
+    std::string extension = ".json";
+    int fileCounter = 0;
+
+    std::string path = baseName + std::to_string(fileCounter) + extension;
+    while (std::filesystem::exists(path)) {
+        fileCounter ++;
+        path = baseName + std::to_string(fileCounter) + extension;
+    }
+
+    filePath = path;
+
+    std::ofstream file(filePath);
 
     file << "{\n";
+    file << "  \"destination\": \"" << destination << "\",\n";
     file << "  \"type\": \"" << typeToString() << "\",\n";
     file << "  \"ticker\": \"" << ticker << "\"";
     file << "\n}";
 
-    return true;
+    return *this;
 }
+
+RequestBuilder & RequestBuilder::setDestination(std::string source) {
+    destination = source;
+    return *this;
+}
+
 RequestBuilder & RequestBuilder::setTicker(std::string symbol) {
     ticker = symbol;
     return *this;
