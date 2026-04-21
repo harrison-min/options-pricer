@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-TickerData Parser::parseTwelveDataCSV (const std::string & filePath) {
+TickerData Parser::parseTickerCSV (const std::string & filePath) {
     TickerData data;
     const int reserveSize = 100;
     data.open.reserve(reserveSize);

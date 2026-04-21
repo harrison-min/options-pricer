@@ -4,6 +4,7 @@
 
 #include "parser.hpp"
 #include "engine.hpp"
+#include "request.hpp"
 
 void printTickerData(const TickerData & data) {
     std::cout << "TickerData for ticker: " << data.tickerName << std::endl;
@@ -18,14 +19,14 @@ void printTickerData(const TickerData & data) {
     }
 }
 
-TickerData fetchData(const std::string & ticker) {
+TickerData fetchData(const std::string & ticker, std::string source) {
     std::cout << "Fetching Data\n";
-    std::string command = "python3 src/fetch_data.py " + ticker;
+    std::string command = "python3 src/fetch_data.py " + ticker + " " + source;
 
     std::system(command.c_str());
 
-    std::string filePath = "data/" + ticker + "_data.csv";
-    TickerData myData = Parser::parseTwelveDataCSV(filePath);
+    std::string filePath = "data/" + ticker + "_" + source + "_data.csv";
+    TickerData myData = Parser::parseTickerCSV(filePath);
 
     return myData;
 }
@@ -74,9 +75,18 @@ int main(int argc, char ** argv) {
 
     std::string ticker = "AMZN";
 
-    TickerData data = fetchData(ticker);
+    RequestBuilder request(ticker, RequestType::FETCH_HISTORICAL_DATA);
+
+    std::string command;
+
+    request.setDestination("TD").writeRequest().sendRequest();
+    request.setDestination("CS").writeRequest().sendRequest();
+
+    std::string filePath = "data/" + ticker + "_" + "CS" + "_data.csv";
+    TickerData data = Parser::parseTickerCSV(filePath);
     OptionInfo option (OptionType::CALL , data.close.back(), data.close.back() + 12, 112.0/252.0);
 
-    getOptionData(data, option, 10000);
+    printTickerData(data);
 
+    getOptionData(data, option, 10000);
 }

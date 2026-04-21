@@ -21,7 +21,7 @@ struct OptionInfo {
 struct ProbabilityHistogram {
     std::vector<double> distribution;
     double binWidth;
-}
+};
 
 
 class AnalyticsEngine {
