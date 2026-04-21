@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <map>
 
 enum class RequestType {
     PLACE_ORDER,
@@ -16,12 +17,14 @@ class RequestBuilder {
         RequestType type;
 
         std::string typeToString();
+        std::map <std::string, std::string> extraParameters;
     public:
         RequestBuilder(std::string symbol, RequestType action);
         RequestBuilder & writeRequest();
         RequestBuilder & sendRequest();
-        RequestBuilder & setDestination(std::string source);
-        RequestBuilder & setTicker(std::string symbol);
+        RequestBuilder & setDestination(const std::string & source);
+        RequestBuilder & setTicker(const std::string & symbol);
         RequestBuilder & setType(RequestType action);
-
+        RequestBuilder & setExtraParameter(const std::string & key, const std::string & value);
+        RequestBuilder & clearExtraParameters();
 };

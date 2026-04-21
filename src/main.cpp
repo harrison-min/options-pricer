@@ -79,14 +79,14 @@ int main(int argc, char ** argv) {
 
     std::string command;
 
-    request.setDestination("CS").writeRequest().sendRequest();
     request.setDestination("TD").writeRequest().sendRequest();
-    /*
-    TickerData data = fetchData(ticker, "CS");
+    request.setDestination("CS").writeRequest().sendRequest();
+
+    std::string filePath = "data/" + ticker + "_" + "CS" + "_data.csv";
+    TickerData data = Parser::parseTickerCSV(filePath);
     OptionInfo option (OptionType::CALL , data.close.back(), data.close.back() + 12, 112.0/252.0);
 
     printTickerData(data);
 
     getOptionData(data, option, 10000);
-    */
 }

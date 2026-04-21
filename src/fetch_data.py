@@ -38,17 +38,16 @@ class RequestHandler:
 
         info = RequestInfo()
 
-
-        info.destination = data['destination'] 
-        info.requestType =  data['type'] 
-        info.ticker = data['ticker'] 
+        info.destination = data['Destination'] 
+        info.requestType =  data['Request Type'] 
+        info.ticker = data['Ticker'] 
 
         match info.requestType:
             case FETCH_HISTORICAL_DATA:
                 if (info.destination == 'CS'): 
-                    self.fetchCSTickerData(info)
+                    self.fetchCSTickerData(info, data)
                 elif (info.destination == 'TD'): 
-                    self.fetchTDTickerData(info)
+                    self.fetchTDTickerData(info, data)
                 
             #case FETCH_ORDER_DATA:
 
@@ -57,13 +56,16 @@ class RequestHandler:
             #case PLACE_ORDER:
 
 
-    def fetchTDTickerData(self, info):
+    def fetchTDTickerData(self, info, extraParameters):
+        interval = extraParameters.get('Interval', '1day')         
+        outputSize = int(extraParameters.get('Output Size', 90))
+
         tsData = self.tdClient.time_series(
             symbol = info.ticker,
-            interval = "1day",
-            outputsize = 90,
+            interval = interval,
+            outputsize = outputSize,
             timezone = "America/New_York",
-            order = "ASC",
+            order = "DESC",
             adjust="true"
         )
 
@@ -74,11 +76,39 @@ class RequestHandler:
             writer = csv.writer(f)
             writer.writerows(csv_data)
  
-    def fetchCSTickerData(self, info):
-        endTime = datetime.datetime.now()
-        startTime = endTime - datetime.timedelta(days = 90)
+    def fetchCSTickerData(self, info, extraParameters):
+        daysBack = int(extraParameters.get('Days', 90))
+        interval = extraParameters.get('Interval', 'daily')
+        frequencyUnit = extraParameters.get('Frequency Unit', 'daily')
+        frequency = int(extraParameters.get('Frequency', 1))
 
-        resp = self.csClient.get_price_history_every_day(info.ticker, start_datetime = startTime, end_datetime = endTime, need_extended_hours_data=False)
+        match frequencyUnit:
+            case 'minute':
+                periodType = 'day'
+            case 'daily':
+                periodType = 'month'
+            case 'weekly':
+                periodType = 'year'
+            case 'monthly':
+                periodType = 'year'
+            case _:
+                periodType = 'month'
+                frequencyUnit = 'daily'
+                frequency = 1
+
+        endTime = datetime.datetime.now()
+        startTime = endTime - datetime.timedelta(days = daysBack)
+
+        resp = self.csClient.get_price_history(
+            info.ticker, 
+            period_type = periodType,
+            start_datetime = startTime, 
+            end_datetime = endTime,
+            frequency_type =  frequencyUnit,
+            frequency = frequency,
+            need_extended_hours_data=False)
+        if resp.status_code != httpx.codes.OK:
+            print(f"Error {resp.status_code}: {resp.text}")
         assert resp.status_code == httpx.codes.OK
 
         history = resp.json()

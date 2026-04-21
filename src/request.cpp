@@ -13,7 +13,7 @@ std::string RequestBuilder::typeToString() {
             return "FETCH_HISTORICAL_DATA";
             break;
         case RequestType::FETCH_ORDER_DATA:
-            return "FETCH_ORDER_DATA:";
+            return "FETCH_ORDER_DATA";
             break;
         case RequestType::CANCEL_ORDER:
             return "CANCEL_ORDER";
@@ -48,25 +48,41 @@ RequestBuilder & RequestBuilder::writeRequest() {
     std::ofstream file(filePath);
 
     file << "{\n";
-    file << "  \"destination\": \"" << destination << "\",\n";
-    file << "  \"type\": \"" << typeToString() << "\",\n";
-    file << "  \"ticker\": \"" << ticker << "\"";
+    file << "  \"Destination\": \"" << destination << "\",\n";
+    file << "  \"Request Type\": \"" << typeToString() << "\",\n";
+    file << "  \"Ticker\": \"" << ticker << "\"";
+
+    for (const auto & [key, value] : extraParameters) {
+        file << ",\n";
+        file << "  \"" << key << "\": \"" << value << "\"";
+    }
+
     file << "\n}";
 
     return *this;
 }
 
-RequestBuilder & RequestBuilder::setDestination(std::string source) {
+RequestBuilder & RequestBuilder::setExtraParameter(const std::string & key, const std::string & value) {
+    extraParameters [key] = value;
+    return *this;
+}
+
+RequestBuilder & RequestBuilder::setDestination(const std::string & source) {
     destination = source;
     return *this;
 }
 
-RequestBuilder & RequestBuilder::setTicker(std::string symbol) {
+RequestBuilder & RequestBuilder::setTicker(const std::string & symbol) {
     ticker = symbol;
     return *this;
 }
 
 RequestBuilder & RequestBuilder::setType(RequestType action) {
     type = action;
+    return *this;
+}
+
+RequestBuilder & RequestBuilder::clearExtraParameters() {
+    extraParameters.erase(extraParameters.begin(), extraParameters.end());
     return *this;
 }
